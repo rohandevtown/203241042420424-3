@@ -1,44 +1,50 @@
-const http = require("http");
+const express = require("express");
+
+// initatilsation
+const app = express();
+
+app.use(express.json());
 
 const port = 8081;
 
 const toDoList = ["rohan", "rohit", "anil", "anup"];
 
-http.createServer((req, res)=> {
-    const {method, url} = req;
-    // console.log(method, url)
-
-    if(url === "/todos"){
-        if(method === "GET"){
-            res.writeHead(200);
-            res.write(toDoList.toString())
-        }
-       
-        else if(method === "POST"){
-            let body = "";
-            req.on('error',(err)=>{
-                console.error(err)
-            }).on('data', (chunk) => {
-                body += chunk;
-                console.log("chunk: ", chunk);
-            }).on('end', () => {
-                body = JSON.parse(body)
-                console.log("body: ", body);
-                let newToDo = toDoList;
-                newToDo.push(body.item)
-            })
-        }
-        else{
-            res.writeHead(501);
-        }
-    }else if(url === "/"){
-
-    }
-
-    res.end();
-})
-.listen(port, () => {
-    console.log(`NodeJs Server is up and running succesfully on port ${port}`)
+// http://localhost:8081/todos
+app.get("/todos", (req, res)=>{
+    res.status(200).send(toDoList);
 })
 
-// http://localhost:8081/
+app.post("/todos", (req, res)=>{
+    let newToDoItem = req.body.item;
+    toDoList.push(newToDoItem);
+    res.status(201).send({
+        message: "Task was added succesfully!"
+    })
+})
+
+app.delete("/todos", (req, res)=>{
+    const itemToDelete = req.body.item;
+
+    toDoList.find((elem, i) => {
+        if(elem == itemToDelete){
+            toDoList.splice(i, 1)
+        }
+    })
+    res.status(204).send({
+        message: "Deleted the item"
+    })
+})
+
+app.all("/todos", (req, res)=>{
+    res.status(501).send()
+})
+
+
+app.all("*",(req, res)=>{
+    res.status(404).send();
+})
+
+
+app.listen(port, () => {
+    console.log(`ExpressJs Server is up and running succesfully on port ${port}`)
+})
